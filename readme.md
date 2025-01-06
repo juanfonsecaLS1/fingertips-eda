@@ -125,21 +125,21 @@ slice_sample(area_avail_ind_names,n = 15) |>
 
 | IndicatorName | AreaTypeName |
 |:---|:---|
-| Hospital admissions for asthma (under 19 years) - registered population | Primary Care Network (v. 25/10/24) |
-| Fuel poverty (low income, low energy efficiency methodology) | Lower tier local authorities (4/21-3/23) |
-| Under 75 mortality rate from respiratory disease considered preventable | NHS regions (44 + 45) |
 | COPD: QOF prevalence | England |
-| Overweight (including obesity) prevalence in adults | Upper tier local authorities (4/21-3/23) |
-| Patients with COPD with a MRC dyspnoea score \>=3 in the last 12 months, who have had an offer of referral to a pulm. rehab. clinic (denominator incl. PCAs) | ICBs, former STPs |
-| COPD: QOF prevalence | Lower tier local authorities (post 4/23) |
-| Air pollution: fine particulate matter (new method - concentrations of total PM2.5) | Government Office Region (E12) |
-| Emergency hospital admissions for asthma in adults (aged 19 years and over) | England |
-| Median length of stay (days) of emergency admissions to hospital for pneumonia | England |
-| Mortality rate from respiratory disease, all ages | England |
+| Fuel poverty (low income, high cost methodology) | Upper tier local authorities (4/21-3/23) |
+| Patients with COPD with a MRC dyspnoea score \>=3 in the last 12 months, who have had an offer of referral to a pulm. rehab. clinic (denominator incl. PCAs) | Sub-ICB, former CCGs |
 | Air pollution: fine particulate matter (new method - concentrations of total PM2.5) | Lower tier local authorities (4/20-3/21) |
-| Patients with COPD with a MRC dyspnoea score \>=3 in the last 12 months, who have had an offer of referral to a pulm. rehab. clinic (denominator incl. PCAs) | General Practice |
-| Mortality rate from pneumonia (all mentions) | CCGs (2021/22) |
-| Median length of stay (days) of emergency admissions to hospital for asthma (aged under 19 years) | ICBs, former STPs |
+| Asthma: QOF prevalence | Primary Care Network (v. 25/10/24) |
+| Under 75 mortality rate from respiratory disease considered preventable | England |
+| The percentage of zero and one day emergency admissions to hospital for bronchiolitis (in children aged under 2 years) | NHS regions (44 + 45) |
+| Mortality rate from asthma | CCGs (2021/22) |
+| Patients with Asthma: review in the last 12 months (denominator incl. PCAs) | ICBs, former STPs |
+| Mortality rate from pneumonia (all mentions) | Government Office Region (E12) |
+| Under 75 mortality rate from respiratory disease | Upper tier local authorities (4/19 - 3/20) |
+| Asthma: QOF prevalence | ICBs, former STPs |
+| COPD: QOF prevalence | ICBs, former STPs |
+| Winter mortality index | England |
+| Smoking cessation support and treatment offered to patients with certain conditions (denominator incl. PCAs) | CCGs (2021/22) |
 
 Data for one indicator of the Respiratory profile
 
@@ -173,7 +173,7 @@ UAs (from Apr 2023)
 ``` r
 ggplot(data,aes(x = Timeperiod,y = Value, col = AreaCode ,group = AreaCode))+
   geom_line()+
-  labs(title = area_avail_ind_names$IndicatorName[1])+
+  labs(title = area_avail_ind_names$IndicatorName[1],subtitle = paste0("Showning a sample of ", area_type_name))+
   theme(axis.text.x = element_text(angle = 90))
 ```
 

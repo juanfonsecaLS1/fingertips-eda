@@ -112,7 +112,7 @@ We are going to show the historic data for five areas of type `r area_type_name`
 ```{r}
 ggplot(data,aes(x = Timeperiod,y = Value, col = AreaCode ,group = AreaCode))+
   geom_line()+
-  labs(title = area_avail_ind_names$IndicatorName[1])+
+  labs(title = area_avail_ind_names$IndicatorName[1],subtitle = paste0("Showning a sample of ", area_type_name))+
   theme(axis.text.x = element_text(angle = 90))
 ```
 
