@@ -17,7 +17,7 @@ library(tidyverse)
     ✔ dplyr     1.1.4     ✔ readr     2.1.5
     ✔ forcats   1.0.0     ✔ stringr   1.5.1
     ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
-    ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+    ✔ lubridate 1.9.3     ✔ tidyr     1.3.1
     ✔ purrr     1.0.2     
     ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
     ✖ dplyr::filter()     masks stats::filter()
@@ -118,27 +118,28 @@ area_avail_ind_names <- area_avail_ind |>
     by=join_by(AreaTypeID)
   )
 
-slice_sample(area_avail_ind_names,n = 15) |> select(-IndicatorID,-AreaTypeID)
+slice_sample(area_avail_ind_names,n = 15) |>
+  select(-IndicatorID,-AreaTypeID) |>
+  kable()
 ```
 
-    # A tibble: 15 × 2
-       IndicatorName                                                    AreaTypeName
-       <fct>                                                            <chr>       
-     1 Smoking Prevalence in adults (aged 18 and over) - current smoke… CCGs (2021/…
-     2 Mortality rate from COPD as a contributory cause                 England     
-     3 Overweight (including obesity) prevalence in adults              ICBs, forme…
-     4 Fuel poverty (low income, low energy efficiency methodology)     Lower tier …
-     5 Mortality rate from COPD as a contributory cause                 CCGs (2021/…
-     6 Smoking Prevalence in adults (aged 18 and over) - current smoke… Upper tier …
-     7 Percentage of physically active adults                           Upper tier …
-     8 Median length of stay (days) of emergency admissions to hospita… NHS regions…
-     9 Mortality rate from chronic obstructive pulmonary disease, all … Government …
-    10 Fuel poverty (low income, low energy efficiency methodology)     England     
-    11 COPD: QOF prevalence                                             General Pra…
-    12 Overweight (including obesity) prevalence in adults              Lower tier …
-    13 Hospital admissions for asthma (under 19 years) - registered  p… Sub-ICB, fo…
-    14 Mortality rate from pneumonia (underlying cause)                 Sub-ICB, fo…
-    15 Fuel poverty (low income, high cost methodology)                 Upper tier …
+| IndicatorName | AreaTypeName |
+|:---|:---|
+| Hospital admissions for asthma (under 19 years) - registered population | Primary Care Network (v. 25/10/24) |
+| Fuel poverty (low income, low energy efficiency methodology) | Lower tier local authorities (4/21-3/23) |
+| Under 75 mortality rate from respiratory disease considered preventable | NHS regions (44 + 45) |
+| COPD: QOF prevalence | England |
+| Overweight (including obesity) prevalence in adults | Upper tier local authorities (4/21-3/23) |
+| Patients with COPD with a MRC dyspnoea score \>=3 in the last 12 months, who have had an offer of referral to a pulm. rehab. clinic (denominator incl. PCAs) | ICBs, former STPs |
+| COPD: QOF prevalence | Lower tier local authorities (post 4/23) |
+| Air pollution: fine particulate matter (new method - concentrations of total PM2.5) | Government Office Region (E12) |
+| Emergency hospital admissions for asthma in adults (aged 19 years and over) | England |
+| Median length of stay (days) of emergency admissions to hospital for pneumonia | England |
+| Mortality rate from respiratory disease, all ages | England |
+| Air pollution: fine particulate matter (new method - concentrations of total PM2.5) | Lower tier local authorities (4/20-3/21) |
+| Patients with COPD with a MRC dyspnoea score \>=3 in the last 12 months, who have had an offer of referral to a pulm. rehab. clinic (denominator incl. PCAs) | General Practice |
+| Mortality rate from pneumonia (all mentions) | CCGs (2021/22) |
+| Median length of stay (days) of emergency admissions to hospital for asthma (aged under 19 years) | ICBs, former STPs |
 
 Data for one indicator of the Respiratory profile
 
@@ -165,6 +166,9 @@ samp_areas <- sample(temp_data$AreaCode |> unique(),5)
 data <- temp_data[temp_data$AreaType == area_type_name & temp_data$AreaCode %in% samp_areas,
                   cols]
 ```
+
+We are going to show the historic data for five areas of type Counties &
+UAs (from Apr 2023)
 
 ``` r
 ggplot(data,aes(x = Timeperiod,y = Value, col = AreaCode ,group = AreaCode))+

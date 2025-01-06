@@ -5,7 +5,6 @@ format: gfm
 
 ```{r}
 #| eval: false
-
 remotes::install_github("rOpenSci/fingertipsR",
                         build_vignettes = TRUE,
                         dependencies = "suggests")
@@ -75,8 +74,9 @@ area_avail_ind_names <- area_avail_ind |>
     by=join_by(AreaTypeID)
   )
 
-slice_sample(area_avail_ind_names,n = 15) |> select(-IndicatorID,-AreaTypeID)
-
+slice_sample(area_avail_ind_names,n = 15) |>
+  select(-IndicatorID,-AreaTypeID) |>
+  kable()
 ```
 
 
@@ -107,6 +107,7 @@ data <- temp_data[temp_data$AreaType == area_type_name & temp_data$AreaCode %in%
                   cols]
 ```
 
+We are going to show the historic data for five areas of type `r area_type_name`
 
 ```{r}
 ggplot(data,aes(x = Timeperiod,y = Value, col = AreaCode ,group = AreaCode))+
