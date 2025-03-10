@@ -11,21 +11,22 @@ remotes::install_github("rOpenSci/fingertipsR",
                         dependencies = "suggests")
 ```
 
-
 ```{r}
 library(fingertipsR)
 library(kableExtra)
 library(tidyverse)
+library(sf)
 ```
 
-
 Downloading profile list
+
 ```{r}
 profile_lst <- profiles()
 head(profile_lst)
 ```
 
 Indicator list for Asthma domain (code `8000009`)
+
 ```{r}
 indicator_lst_asthma <- indicators(DomainID = 8000009)
 
@@ -34,6 +35,7 @@ indicator_lst_asthma |>
 ```
 
 Indicator list for Respiratory disease (code `29`)
+
 ```{r}
 indicator_lst_resp <- indicators(ProfileID = 29)
 
@@ -42,7 +44,7 @@ indicator_lst_resp |>
   kable()
 ```
 
-Selecting the codes for Respiratory profile 
+Selecting the codes for Respiratory profile
 
 ```{r}
 sel_indicator <- indicator_lst_resp |>
@@ -58,7 +60,6 @@ area_avail_ind <- do.call(bind_rows,lapply(sel_indicator,\(x) indicator_areatype
 ```{r}
 area_ty_lst <- area_types()
 ```
-
 
 ```{r}
 area_avail_ind_names <- area_avail_ind |>
@@ -79,8 +80,8 @@ slice_sample(area_avail_ind_names,n = 15) |> select(-IndicatorID,-AreaTypeID)
 
 ```
 
+Data for one indicator of the Respiratory profile
 
-Data for one indicator of the Respiratory profile 
 ```{r}
 temp_data <- fingertips_data(
   IndicatorID = area_avail_ind$IndicatorID[1],
@@ -88,7 +89,6 @@ temp_data <- fingertips_data(
   )
 
 ```
-
 
 ```{r}
 # Code from vignette 
@@ -107,7 +107,6 @@ data <- temp_data[temp_data$AreaType == area_type_name & temp_data$AreaCode %in%
                   cols]
 ```
 
-
 ```{r}
 ggplot(data,aes(x = Timeperiod,y = Value, col = AreaCode ,group = AreaCode))+
   geom_line()+
@@ -115,3 +114,180 @@ ggplot(data,aes(x = Timeperiod,y = Value, col = AreaCode ,group = AreaCode))+
   theme(axis.text.x = element_text(angle = 90))
 ```
 
+## Compiling a list of indicators from the Respiratory and Asthma domain that are available for lower and upper tier LA
+
+```{r}
+indicator_lst_all <- bind_rows(indicator_lst_resp,indicator_lst_asthma)
+
+sel_indicator_all <- indicator_lst_all |> pull(IndicatorID) |> unique()
+```
+
+The following code will extract the indicators that are available for lower/upper LA
+
+```{r}
+area_avail_ind_all <- do.call(bind_rows,lapply(sel_indicator_all,\(x) indicator_areatypes(IndicatorID = x)))
+
+LA_ind_names_all <- area_avail_ind_all |>
+  left_join(
+    indicator_lst_all |>
+      select(IndicatorID, IndicatorName) |>
+      unique(),
+    by = join_by(IndicatorID)
+  ) |> 
+  left_join(
+    area_ty_lst |> 
+      select(AreaTypeID,AreaTypeName) |> 
+      unique(),
+    by=join_by(AreaTypeID)
+  ) |> 
+  filter(str_detect(AreaTypeName,pattern = "(Upper|Lower|Practice|Sub-ICB)"))
+```
+
+## Spatial data
+
+Spatial datasets for different areas have been extracted manually from [geoportal.statistics.gov.uk](https://geoportal.statistics.gov.uk), [www.data.gov.uk](https://www.data.gov.uk/dataset/5b656163-8b0f-441c-a26d-d59c0bba307f/sub-integrated-care-board-locations-april-2023-en-bsc), and [NHS](https://gp-catchments-data-download-nhsgisscw.hub.arcgis.com/). Static copies have been stored on the releases of this repository for full reproducibility.
+
+```{r}
+files <- c("https://github.com/juanfonsecaLS1/fingertips-eda/releases/download/v0/Local_Authority_Districts_December_2023_Boundaries_UK_BFE_-2174146030568070774.gpkg",
+           "https://github.com/juanfonsecaLS1/fingertips-eda/releases/download/v0/Upper_Tier_Local_Authorities_December_2022_Boundaries_UK_BFE_-8448860560432126468.gpkg",
+           "https://github.com/juanfonsecaLS1/fingertips-eda/releases/download/v0/Sub_Integrated_Care_Board_Locations_April_2023_EN_BSC_-6830083509537628768.gpkg",
+           "https://github.com/juanfonsecaLS1/fingertips-eda/releases/download/v0/GP_catchments_data.zip"
+           )
+
+lapply(files, \(f1) {
+  n1 <- basename(f1)
+  if (!file.exists(n1)) {
+    download.file(f1, destfile = n1, mode = "wb")
+  }
+})
+
+```
+
+GP catchments will need to be assembled into a single sf object
+
+```{r}
+if(!dir.exists("GP_catchments")){
+  unzip("GP_catchments_data.zip",exdir = "GP_catchments")
+  gj_files <- list.files("GP_catchments/",pattern = ".*\\.geojson",full.names = T)
+  gp_catchment_sf <- lapply(gj_files,st_read,quiet = T) |> bind_rows()
+  st_write(gp_catchment_sf,"gp_catchment.gpkg")
+  rm(gj_files,gp_catchment_sf)
+}
+
+
+```
+
+Loading spatial data for Lower tier LA (Districts), Sub-ICB, and Practices.
+
+```{r}
+lt_la_sf <- st_read("Local_Authority_Districts_December_2023_Boundaries_UK_BFE_-2174146030568070774.gpkg")
+
+sicb_sf <- st_read("Sub_Integrated_Care_Board_Locations_April_2023_EN_BSC_-6830083509537628768.gpkg")
+
+gp_practices <- st_read("gp_catchment.gpkg") |> st_zm() |>  st_transform(27700)
+```
+
+We will create a polygon that contains Leeds, Bradford, Harrogate, and Skipton.
+
+```{r}
+library(tidygeocoder)
+
+locations <- tibble(cities = c("Bradford","Leeds","Skipton","Harrogate"), country = "UK")
+
+sf_points <-locations |> geocode(city = cities,country = country) |> 
+  st_as_sf(coords = c("long","lat"),crs = 4326) |> 
+  st_transform(27700)
+
+convex_hull <- sf_points |> st_union() |> st_convex_hull()
+
+```
+
+We can extract the geometries that intersect the polygon for the different areas.
+
+```{r}
+lt_la_sf_selected <- lt_la_sf[convex_hull,]
+sicb_sf_selected <- sicb_sf[convex_hull,]
+gp_practices_selected <- gp_practices[convex_hull,]
+
+# mapview::mapview(lt_la_sf_selected)
+# mapview::mapview(sicb_sf_selected)
+# mapview::mapview(gp_practices_selected)
+```
+
+
+### Extracting the data for the selected areas
+
+
+```{r}
+if(!file.exists("ind_data.RDS")){
+  all_data <- fingertips_data(IndicatorID = LA_ind_names_all$IndicatorID,AreaTypeID = "All")
+  write_rds(all_data,file = "ind_data.RDS")
+} else {
+  all_data <- read_rds(file = "ind_data.RDS")
+}
+```
+
+```{r}
+selected_data_ltla <- all_data |>
+  filter(AreaCode %in% lt_la_sf_selected$LAD23CD)
+
+selected_data_sicb <- all_data |>
+  filter(AreaCode %in% paste0("n",sicb_sf_selected$SICBL23CD))
+  # filter(AreaType %in% c("ICB"))
+
+selected_data_gp <- all_data |> 
+  # filter(AreaType == "GPs")
+  filter(AreaCode %in% gp_practices_selected$ODSCode)
+```
+
+
+An overview of the trends in lower tier LA data
+```{r}
+selected_data_ltla |> 
+  ggplot(aes(Timeperiod,Value,colour = AreaName,group = AreaName))+
+  geom_line()+
+  facet_wrap(.~IndicatorName+Sex,scales = "free")+
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+
+sub-ICB
+```{r}
+# selected_data_sicb |> 
+#   ggplot(aes(Timeperiod,Value,colour = AreaName))+
+#   geom_line()+
+#   facet_wrap(.~IndicatorName,scales = "free")+
+#   theme(axis.text.x = element_text(angle = 90),legend.position = "top")
+```
+
+```{r}
+selected_data_gp |> 
+  ggplot(aes(Timeperiod,Value,colour = ParentCode,group = AreaName))+
+  geom_line(alpha = 0.4)+
+  facet_wrap(.~IndicatorName+Sex,scales = "free")+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme_minimal()
+```
+
+
+
+
+
+
+
+
+<!-- A brief explanation: -->
+
+<!-- Full Extent (BFE) – Full resolution boundaries go to the Extent of the Realm (Low Water Mark) and are the most detailed of the boundaries. -->
+
+<!-- Full Clipped (BFC) – Full resolution boundaries that are clipped to the coastline (Mean High Water mark). -->
+
+<!-- Generalised Clipped (BGC) - Generalised to 20m and clipped to the coastline (Mean High Water mark) and more generalised than the BFE boundaries. -->
+
+<!-- Super Generalised Clipped (BSC) (200m) – Generalised to 200m and clipped to the coastline (Mean High Water mark). -->
+
+<!-- Ultra Generalised Clipped (BUC) (500m) – Generalised to 500m and clipped to the coastline (Mean High Water mark). -->
+
+<!-- Grid, Extent (BGE) - Grid formed of equally sized cells which extend beyond the coastline. -->
+
+<!-- Generalised, Grid (BGG) - Generalised 50m grid squares. -->
