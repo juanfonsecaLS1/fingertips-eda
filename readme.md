@@ -17,8 +17,13 @@ library(tidyverse)
     ✔ dplyr     1.1.4     ✔ readr     2.1.5
     ✔ forcats   1.0.0     ✔ stringr   1.5.1
     ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+<<<<<<< HEAD
     ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
     ✔ purrr     1.0.4     
+=======
+    ✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+    ✔ purrr     1.0.2     
+>>>>>>> 7d60f88daebf6a3ff0a5d8ff97995d40c2ed28dc
     ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
     ✖ dplyr::filter()     masks stats::filter()
     ✖ dplyr::group_rows() masks kableExtra::group_rows()
@@ -124,9 +129,12 @@ area_avail_ind_names <- area_avail_ind |>
     by=join_by(AreaTypeID)
   )
 
-slice_sample(area_avail_ind_names,n = 15) |> select(-IndicatorID,-AreaTypeID)
+slice_sample(area_avail_ind_names,n = 15) |>
+  select(-IndicatorID,-AreaTypeID) |>
+  kable()
 ```
 
+<<<<<<< HEAD
     # A tibble: 15 × 2
        IndicatorName                                                    AreaTypeName
        <fct>                                                            <chr>       
@@ -145,6 +153,25 @@ slice_sample(area_avail_ind_names,n = 15) |> select(-IndicatorID,-AreaTypeID)
     13 Emergency hospital admissions for COPD, all ages                 ICBs, forme…
     14 Hospital admissions for asthma (under 19 years) - registered  p… Primary Car…
     15 Mortality rate from chronic obstructive pulmonary disease, all … Upper tier …
+=======
+| IndicatorName | AreaTypeName |
+|:---|:---|
+| COPD: QOF prevalence | England |
+| Fuel poverty (low income, high cost methodology) | Upper tier local authorities (4/21-3/23) |
+| Patients with COPD with a MRC dyspnoea score \>=3 in the last 12 months, who have had an offer of referral to a pulm. rehab. clinic (denominator incl. PCAs) | Sub-ICB, former CCGs |
+| Air pollution: fine particulate matter (new method - concentrations of total PM2.5) | Lower tier local authorities (4/20-3/21) |
+| Asthma: QOF prevalence | Primary Care Network (v. 25/10/24) |
+| Under 75 mortality rate from respiratory disease considered preventable | England |
+| The percentage of zero and one day emergency admissions to hospital for bronchiolitis (in children aged under 2 years) | NHS regions (44 + 45) |
+| Mortality rate from asthma | CCGs (2021/22) |
+| Patients with Asthma: review in the last 12 months (denominator incl. PCAs) | ICBs, former STPs |
+| Mortality rate from pneumonia (all mentions) | Government Office Region (E12) |
+| Under 75 mortality rate from respiratory disease | Upper tier local authorities (4/19 - 3/20) |
+| Asthma: QOF prevalence | ICBs, former STPs |
+| COPD: QOF prevalence | ICBs, former STPs |
+| Winter mortality index | England |
+| Smoking cessation support and treatment offered to patients with certain conditions (denominator incl. PCAs) | CCGs (2021/22) |
+>>>>>>> 7d60f88daebf6a3ff0a5d8ff97995d40c2ed28dc
 
 Data for one indicator of the Respiratory profile
 
@@ -172,10 +199,13 @@ data <- temp_data[temp_data$AreaType == area_type_name & temp_data$AreaCode %in%
                   cols]
 ```
 
+We are going to show the historic data for five areas of type Counties &
+UAs (from Apr 2023)
+
 ``` r
 ggplot(data,aes(x = Timeperiod,y = Value, col = AreaCode ,group = AreaCode))+
   geom_line()+
-  labs(title = area_avail_ind_names$IndicatorName[1])+
+  labs(title = area_avail_ind_names$IndicatorName[1],subtitle = paste0("Showning a sample of ", area_type_name))+
   theme(axis.text.x = element_text(angle = 90))
 ```
 
