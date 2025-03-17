@@ -1,0 +1,87 @@
+---
+title: "Fingertips Data Overview"
+author: "Juan Fonseca"
+format: docx
+editor: source
+---
+
+```{r,include=FALSE}
+library(kableExtra)
+library(tidyverse)
+
+# Loading indicator data
+all_data <- read_rds(file = "ind_data.RDS")
+
+
+```
+
+[Fingertips](https://fingertips.phe.org.uk/) provides annual indicators for several levels of spatial aggregation. We have extracted indicators data from the Respiratory and Asthma profiles. Details reported for each indicator are shown in the table below with the corresponding availability:
+
+```{r}
+#| echo: false
+#| label: tbl-fields
+#| tbl-cap: Fingertips indicators and availability by data field.
+
+count_NAs <- function(df) {
+    sapply(df, function(x) sum(is.na(x)))
+  }
+
+df <- all_data |> 
+  drop_na(Value) 
+
+a <- (1-count_NAs(df)/nrow(df)) |>
+    enframe(name = "field",
+            value = "available") |>
+    head(24) |> 
+    mutate(available = sprintf("%.0f%%", available * 100))
+
+a |> kable()
+```
+
+A compilation of the indicators and the range of time periods available for each area type is presented in @tbl-indicators. (Areas marked with a * indicate that boundaries have changed at least once)
+
+
+::: landscape
+```{r}
+#| echo: false
+#| label: tbl-indicators
+#| tbl-cap: Data availability by area type 
+
+
+opts <- options(knitr.kable.NA = "")
+
+summary_table <- all_data |>
+  drop_na(Value) |> 
+  mutate(AreaType = str_replace(AreaType,
+                                pattern = "\\s\\(.*\\)",
+                                replacement = "*")) |>
+  nest(.by = c(IndicatorName,AreaType)) |> 
+  mutate(time_period_range = map(data,\(.x){
+    myrange <- .x$TimeperiodSortable |> range()
+    .x |>
+      select(Timeperiod,TimeperiodSortable) |> 
+      unique() |> 
+      filter(TimeperiodSortable %in% myrange)}),
+    from = map_chr(time_period_range,\(.x){
+      .x |>
+        slice_min(TimeperiodSortable,n = 1) |> 
+        pull(Timeperiod) |> 
+        head(1)
+    }),
+    to = map_chr(time_period_range,\(.x){
+      .x |>
+        slice_max(TimeperiodSortable,n = 1) |> 
+        pull(Timeperiod) |> 
+        tail(1)
+    })) |> 
+   mutate(timerange = paste0(from," to ",to),
+         .by = c(IndicatorName,AreaType),
+         .keep = "none") |> 
+  pivot_wider(values_from = timerange,
+              names_from = AreaType)
+  
+
+summary_table |> 
+  kable()
+```
+:::

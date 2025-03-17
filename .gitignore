@@ -51,3 +51,9 @@ rsconnect/
 *.RDS
 
 *.gpkg
+
+*.zip
+
+GP_catchments/
+GP_catchments/*
+

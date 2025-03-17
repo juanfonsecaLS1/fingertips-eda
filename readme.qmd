@@ -277,20 +277,3 @@ selected_data_gp |>
 
 
 
-
-
-<!-- A brief explanation: -->
-
-<!-- Full Extent (BFE) – Full resolution boundaries go to the Extent of the Realm (Low Water Mark) and are the most detailed of the boundaries. -->
-
-<!-- Full Clipped (BFC) – Full resolution boundaries that are clipped to the coastline (Mean High Water mark). -->
-
-<!-- Generalised Clipped (BGC) - Generalised to 20m and clipped to the coastline (Mean High Water mark) and more generalised than the BFE boundaries. -->
-
-<!-- Super Generalised Clipped (BSC) (200m) – Generalised to 200m and clipped to the coastline (Mean High Water mark). -->
-
-<!-- Ultra Generalised Clipped (BUC) (500m) – Generalised to 500m and clipped to the coastline (Mean High Water mark). -->
-
-<!-- Grid, Extent (BGE) - Grid formed of equally sized cells which extend beyond the coastline. -->
-
-<!-- Generalised, Grid (BGG) - Generalised 50m grid squares. -->
